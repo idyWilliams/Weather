@@ -1,11 +1,9 @@
-
-
-// service.ts
 import { useEffect, useState } from "react";
 import { api, makeGetRequest } from "./api";
+import { WeatherData } from "../types";
 
 export const useGetWeather = (city: string) => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<WeatherData | null>(null);
   const [error, ] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -17,7 +15,7 @@ export const useGetWeather = (city: string) => {
         const result = await makeGetRequest(api.getWeather(city));
         setData(result);
       } catch (error) {
-        console.error(error);
+        console.error(error, "error");
         // setError(error?.message);
       } finally {
         setIsLoading(false);
