@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import CityWeatherCard from "./CityWeatherCard";
 import FavoriteCity from "./FavoriteCity";
+import { useGetWeather } from "../service";
+import { WeatherData } from "../types";
 
 function Cities() {
   const initialCityList = [
@@ -25,6 +27,10 @@ function Cities() {
   const [favoriteCities, setFavoriteCities] = useState<string[]>([]);
   const [selectedFavorite, setSelectedFavorite] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [weatherData, setWeatherData] = useState<{
+    [key: string]: WeatherData | null;
+  }>({});
+  const getWeather = useGetWeather(searchQuery);
 
   const removeCity = (cityToRemove: string) => {
     setCityList((prevCityList) =>
@@ -51,6 +57,33 @@ function Cities() {
     setSelectedFavorite(city);
   };
 
+  const handleSearch = async () => {
+    if (searchQuery.trim() === "") {
+      alert("Please enter a city name");
+      return;
+    }
+
+    if (cityList.includes(searchQuery)) {
+      alert(`City ${searchQuery} is already in the list!`);
+      return;
+    }
+
+    try {
+      const { data } = await getWeather;
+
+      setWeatherData((prevWeatherData) => ({
+        ...prevWeatherData,
+        [searchQuery]: data,
+      }));
+
+      setCityList((prevCityList) => [...prevCityList, searchQuery]);
+      setSearchQuery("");
+    } catch (error) {
+      console.error("Error fetching data from the API:", error);
+
+    }
+  };
+
   useEffect(() => {
     const cachedFavorites = localStorage.getItem("favoriteCities");
     if (cachedFavorites) {
@@ -62,26 +95,11 @@ function Cities() {
     localStorage.setItem("favoriteCities", JSON.stringify(favoriteCities));
   }, [favoriteCities]);
 
-  const handleSearch = () => {
-    if (searchQuery.trim() === "") {
-      alert("Please enter a city name");
-      return;
-    }
-
-    if (cityList.includes(searchQuery)) {
-      alert(`City ${searchQuery} is already in the list!`);
-      return;
-    }
-
-    setCityList((prevCityList) => [...prevCityList, searchQuery]);
-    setSearchQuery("");
-  };
-
   return (
     <div className="container mx-auto my-8">
       {favoriteCities.length > 0 && (
         <>
-          <h2 className="text-2xl font-semibold mt-8">Favourites Cities</h2>
+          <h2 className="text-2xl font-semibold mt-8">Favorite Cities</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {favoriteCities.map((favoriteCity) => (
               <FavoriteCity
@@ -90,12 +108,15 @@ function Cities() {
                 onRemove={() => removeFromFavorites(favoriteCity)}
                 onClick={() => handleFavoriteClick(favoriteCity)}
                 isSelected={selectedFavorite === favoriteCity}
+                weatherData={weatherData[favoriteCity]}
               />
             ))}
           </div>
         </>
       )}
-      <h1 className="text-3xl font-semibold mb-4 mt-8">Weather in Top Cities</h1>
+      <h1 className="text-3xl font-semibold mb-4 mt-8">
+        Weather in Top Cities
+      </h1>
 
       <div className="mb-4 flex">
         <input
@@ -119,6 +140,7 @@ function Cities() {
               cityName={city}
               onRemove={() => removeCity(city)}
               onAddToFavorites={() => addToFavorites(city)}
+              weatherData={weatherData[city]}
             />
           ))}
       </div>

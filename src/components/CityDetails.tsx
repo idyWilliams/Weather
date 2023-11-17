@@ -1,42 +1,39 @@
-import React, {  useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-import { api, makeGetRequest } from "../service/api";
 import { WeatherData } from "../types";
 import moment from "moment";
+import { useGetWeather } from "../service";
 
 interface CityDetailsProps {}
 
 const CityDetails: React.FC<CityDetailsProps> = () => {
   const { cityName } = useParams<{ cityName: string }>();
-  const cachedWeather = JSON.parse(
-    localStorage.getItem(`weather-${cityName}`) || "null"
-  );
-  const [data, setData] = useState<WeatherData | null>(cachedWeather);
-    console.log(data, "datadatadata");
-    console.log(cachedWeather, "cachedWeather");
+  const [data, setData] = useState<WeatherData | null>(null);
+  const getWeather = useGetWeather(cityName!);
   const [notes, setNotes] = useState(
     localStorage.getItem(`notes-${cityName}`) || ""
   );
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
+
   useEffect(() => {
-    if (!cachedWeather) {
-      fetchData();
+    const fetchData =  () => {
+      try {
+        const { data } =  getWeather;
+        setData(data);
+      } catch (error) {
+        console.error("Error fetching data from the API:", error);
+      }
+    };
+
+    fetchData();
+  }, [cityName, getWeather]);
+
+  useEffect(() => {
+    if (data) {
+      localStorage.setItem(`weather-${cityName}`, JSON.stringify(data));
     }
-  }, [cityName]);
-
-  const fetchData = async () => {
-    try {
-      const result = await makeGetRequest(api.getWeather(cityName as string));
-
-      setData(result);
-
-      localStorage.setItem(`weather-${cityName}`, JSON.stringify(result));
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  }, [cityName, data]);
 
   const handleSave = () => {
     localStorage.setItem(`notes-${cityName}`, notes);
@@ -74,7 +71,7 @@ const CityDetails: React.FC<CityDetailsProps> = () => {
         </div>
 
         {data && (
-          <div className="grid grid-cols-2  gap-4 mt-5">
+          <div className="grid grid-cols-1 md:grid-cols-2  gap-4 mt-5">
             <div className="bg-blue-100 p-4 rounded-md space-y-3">
               <p className="text-gray-700">
                 <strong>Country:</strong> {data?.location?.country}

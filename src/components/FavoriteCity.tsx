@@ -1,18 +1,21 @@
 import { useFavoriteCityWeather } from "../helper";
-
+import { WeatherData } from "../types";
 
 function FavoriteCity({
   cityName,
   onRemove,
   onClick,
   isSelected,
+  weatherData,
 }: {
   cityName: string;
   onRemove: () => void;
   onClick: () => void;
   isSelected: boolean;
+  weatherData: WeatherData | null ;
 }) {
   const { data, isLoading, error } = useFavoriteCityWeather(cityName);
+  const displayData = weatherData || data;
 
   return (
     <div
@@ -40,9 +43,10 @@ function FavoriteCity({
           ? "Loading..."
           : error
           ? `Error: ${error}`
-          : `Temperature: ${data?.current?.temperature}°C`}
+          : `Temperature: ${displayData?.current?.temperature}°C`}
       </p>
     </div>
   );
 }
-export default FavoriteCity
+
+export default FavoriteCity;

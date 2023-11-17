@@ -1,21 +1,23 @@
-import { BsSuitHeart } from "react-icons/bs";
+import { IoHeart } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import { useGetWeather } from "../service";
-
+import { WeatherData } from "../types";
 
 function CityWeatherCard({
   cityName,
   onRemove,
   onAddToFavorites,
+  weatherData,
 }: {
   cityName: string;
   onRemove: () => void;
   onAddToFavorites: () => void;
+  weatherData: WeatherData | null;
 }) {
-  const { data, isLoading, error } = useGetWeather(
-    cityName
-  );
+  const { data, isLoading, error } = useGetWeather(cityName);
   const navigate = useNavigate();
+
+  const displayData = weatherData || data;
 
   return (
     <div
@@ -24,9 +26,8 @@ function CityWeatherCard({
     >
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold mb-2 text-[#000]">{cityName}</h2>
-
         <img
-          src={data?.current?.weather_icons[0]}
+          src={displayData?.current?.weather_icons[0]}
           alt={cityName}
           className="rounded-full h-8 w-8"
         />
@@ -34,10 +35,10 @@ function CityWeatherCard({
 
       {isLoading && <p className="text-gray-600 mt-2">Loading...</p>}
       {error && <p className="text-red-600 mt-2">Error: {error}</p>}
-      {data && (
+      {displayData && (
         <div className="mt-2">
           <p className="text-gray-700">
-            Temperature: {data?.current?.temperature}°C
+            Temperature: {displayData?.current?.temperature}°C
           </p>
         </div>
       )}
@@ -49,11 +50,12 @@ function CityWeatherCard({
         >
           Remove
         </button>
-        <div>
-          <BsSuitHeart
+        <div className="rounded-full p-1 shadow-md border bg-slate-600 hover:bg-slate-400 active:scale-75 ease-in-out text-right">
+          <IoHeart
             size={25}
+            // fill={}
             onClick={(e: { stopPropagation: () => void }) => {
-              e.stopPropagation(); // Prevents click on heart from triggering card click
+              e.stopPropagation();
               onAddToFavorites();
             }}
             className="text-red-500 cursor-pointer"
@@ -63,4 +65,5 @@ function CityWeatherCard({
     </div>
   );
 }
+
 export default CityWeatherCard;
